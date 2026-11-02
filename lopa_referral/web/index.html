@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Referral Prototype</title>
+<style>
+:root{
+  --bg:#f4f7f9; --card:#ffffff; --ink:#15232e; --muted:#5b6b78; --line:#dde5ea;
+  --brand:#0b6e8a; --brand-ink:#ffffff; --brand-soft:#e3f1f5;
+  --ok:#1b7f4b; --ok-soft:#e2f4ea; --warn:#9a6200; --warn-soft:#fff2d9; --bad:#b3261e; --bad-soft:#fde8e6;
+  --routine:#1b7f4b; --urgent:#9a6200; --emergent:#b3261e;
+  --radius:12px; --shadow:0 1px 2px rgba(20,40,60,.06),0 4px 14px rgba(20,40,60,.05);
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#0f1a21; --card:#16252f; --ink:#e8eff4; --muted:#9db0bd; --line:#27404f;
+  --brand:#4cc2de; --brand-ink:#06222b; --brand-soft:#17323d;
+  --ok:#5fd397; --ok-soft:#163626; --warn:#f1b84b; --warn-soft:#3a2d12; --bad:#ff8f87; --bad-soft:#3d1c1a;
+  --routine:#5fd397; --urgent:#f1b84b; --emergent:#ff8f87; --shadow:none;}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+h1,h2,h3{line-height:1.25;margin:0 0 .5rem} h2{font-size:1.35rem} h3{font-size:1.05rem}
+p{margin:.25rem 0 .75rem} .muted{color:var(--muted)} .small{font-size:.875rem}
+button,input,select,textarea{font:inherit;color:inherit}
+.app{display:grid;grid-template-columns:230px 1fr;min-height:100vh}
+nav{background:var(--card);border-right:1px solid var(--line);padding:18px 12px;position:sticky;top:0;height:100vh;display:flex;flex-direction:column;gap:4px}
+.logo{font-weight:700;font-size:1.05rem;padding:4px 10px 14px;display:flex;gap:8px;align-items:center}
+.logo b{display:grid;place-items:center;width:28px;height:28px;border-radius:8px;background:var(--brand);color:var(--brand-ink)}
+nav button{all:unset;cursor:pointer;display:flex;gap:10px;align-items:center;padding:10px 12px;border-radius:10px;color:var(--muted)}
+nav button:hover{background:var(--brand-soft);color:var(--ink)}
+nav button[aria-current=page]{background:var(--brand-soft);color:var(--ink);font-weight:600}
+nav button:focus-visible,.btn:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid var(--brand);outline-offset:2px}
+nav .count{margin-left:auto;background:var(--brand);color:var(--brand-ink);border-radius:99px;padding:0 8px;font-size:.78rem;font-weight:700}
+.who{margin-top:auto;border-top:1px solid var(--line);padding:12px 6px 0;font-size:.875rem}
+main{padding:26px clamp(16px,4vw,44px);max-width:1100px;width:100%}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);margin-bottom:18px}
+.grid{display:grid;gap:14px}.g2{grid-template-columns:repeat(auto-fit,minmax(230px,1fr))}.g3{grid-template-columns:repeat(auto-fit,minmax(170px,1fr))}
+label.f{display:block;font-weight:600;font-size:.92rem;margin-bottom:4px}
+.hint{font-weight:400;color:var(--muted);font-size:.8rem}label.f .hint{display:block}
+input[type=number],input[type=text],select,textarea{width:100%;padding:10px 12px;border:1.5px solid var(--line);border-radius:10px;background:var(--bg)}
+input.bad,select.bad{border-color:var(--bad);background:var(--bad-soft)} input.good{border-color:var(--ok)}
+.err{color:var(--bad);font-size:.82rem;min-height:1.1em;margin-top:3px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{position:relative}.chip input{position:absolute;opacity:0;inset:0;cursor:pointer}
+.chip span{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border:1.5px solid var(--line);border-radius:99px;background:var(--bg);cursor:pointer;user-select:none}
+.chip input:checked+span{background:var(--brand);border-color:var(--brand);color:var(--brand-ink);font-weight:600}
+.chip input:focus-visible+span{outline:3px solid var(--brand);outline-offset:2px}
+.btn{cursor:pointer;border:0;border-radius:10px;padding:11px 18px;font-weight:600;background:var(--brand);color:var(--brand-ink)}
+.btn.sec{background:transparent;color:var(--ink);border:1.5px solid var(--line)} .btn.danger{background:var(--bad);color:#fff}
+.btn:disabled{opacity:.5;cursor:not-allowed} .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.pill{display:inline-flex;align-items:center;gap:6px;border-radius:99px;padding:3px 11px;font-size:.82rem;font-weight:700;border:1.5px solid currentColor}
+.pill.routine{color:var(--routine)}.pill.urgent{color:var(--urgent)}.pill.emergent{color:var(--emergent)}
+.st{background:var(--brand-soft);color:var(--ink);border-radius:8px;padding:3px 10px;font-size:.82rem;font-weight:600}
+.st.pending_review,.st.needs_manual_triage{background:var(--warn-soft);color:var(--warn)}.st.reviewed{background:var(--brand-soft)}
+.st.dispatched{background:var(--brand-soft)}.st.acknowledged{background:var(--ok-soft);color:var(--ok)}
+.banner{border-radius:10px;padding:12px 14px;margin:10px 0;display:flex;gap:10px;align-items:flex-start}
+.banner.ok{background:var(--ok-soft);color:var(--ok)}.banner.warn{background:var(--warn-soft);color:var(--warn)}.banner.bad{background:var(--bad-soft);color:var(--bad)}.banner.info{background:var(--brand-soft);color:var(--ink)}
+.banner ul{margin:.2rem 0 0;padding-left:1.1rem}
+table{width:100%;border-collapse:collapse;font-size:.92rem}th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--muted);font-weight:600;font-size:.8rem;text-transform:uppercase;letter-spacing:.03em}
+.split{display:grid;grid-template-columns:1fr 1fr;gap:16px}@media(max-width:860px){.split{grid-template-columns:1fr}}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 14px}.kv dt{color:var(--muted)}.kv dd{margin:0;font-weight:600}
+.bar{height:10px;border-radius:99px;background:var(--line);overflow:hidden}.bar i{display:block;height:100%;background:var(--brand)}
+.steps{display:flex;gap:6px;margin:0 0 18px;padding:0;list-style:none;flex-wrap:wrap}
+.steps li{display:flex;align-items:center;gap:6px;font-size:.85rem;color:var(--muted)}
+.steps li b{display:grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--line);color:var(--ink);font-size:.75rem}
+.steps li.on{color:var(--ink);font-weight:600}.steps li.on b{background:var(--brand);color:var(--brand-ink)}.steps li.done b{background:var(--ok);color:#fff}
+.steps li+li::before{content:"›";margin-right:4px;color:var(--muted)}
+.roles{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(230px,1fr))}
+.role{all:unset;cursor:pointer;border:1.5px solid var(--line);border-radius:12px;padding:16px;background:var(--card)}
+.role:hover,.role:focus-visible{border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-soft)}
+.role strong{display:block}.empty{text-align:center;color:var(--muted);padding:30px 10px}
+.timeline{list-style:none;margin:0;padding:0}.timeline li{padding:6px 0 6px 18px;border-left:2px solid var(--line);position:relative;font-size:.88rem}
+.timeline li::before{content:"";position:absolute;left:-6px;top:12px;width:10px;height:10px;border-radius:50%;background:var(--brand)}
+.mono{font-family:ui-monospace,Consolas,monospace;font-size:.8rem}
+.skip{position:absolute;left:-999px}.skip:focus{left:8px;top:8px;background:var(--card);padding:8px;z-index:9}
+@media(max-width:760px){.app{grid-template-columns:1fr}nav{position:static;height:auto;flex-direction:row;flex-wrap:wrap;border-right:0;border-bottom:1px solid var(--line)}.who{margin:0 0 0 auto;border:0;padding:0}.logo{padding:4px 8px}}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<div id="root"></div>
+<script>
+"use strict";
+const $=(s,e=document)=>e.querySelector(s), esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const state={meta:null,me:null,token:null,tab:"new",referrals:[],result:null,sel:null,form:{}};
+const TABS=[["new","➕","New referral","submit"],["review","🩺","Review queue","review"],["track","📋","Tracker","view_record"],
+            ["audit","🧾","Audit log","view_audit"],["monitor","📈","Model monitor",null],["risk","🛡️","Risk analysis",null]];
+async function api(path,opt={}){
+  const r=await fetch(path,{method:opt.body?"POST":"GET",headers:{"Content-Type":"application/json","X-Token":state.token||""},body:opt.body?JSON.stringify(opt.body):undefined});
+  let d={}; try{d=await r.json()}catch{} return {ok:r.ok,status:r.status,data:d};
+}
+const can=p=>!p||(state.me&&state.me.perms.includes(p));
+const cap=s=>String(s).replace(/_/g," ").replace(/^./,c=>c.toUpperCase());
+
+/* ---------- sign in ---------- */
+function loginView(){
+  $("#root").innerHTML=`<main id="main" style="margin:auto"><div class="card" style="max-width:820px;margin:8vh auto">
+   <div class="logo"><b>＋</b> Referral Prototype</div>
+   <h2>Who are you signing in as?</h2>
+   <p class="muted">Demo accounts only. Each role can do different things, which is how the access-control safeguard works. All data here is synthetic and stays in memory.</p>
+   <div class="roles">${state.meta.users.map(u=>`<button class="role" data-role="${u.role}"><strong>${esc(u.name.split(" (")[0])}</strong><span class="muted small">${esc(cap(u.role))}</span></button>`).join("")}</div>
+  </div></main>`;
+  document.querySelectorAll(".role").forEach(b=>b.onclick=async()=>{
+    const r=await api("/api/login",{body:{role:b.dataset.role}}); state.token=r.data.token; state.me=r.data;
+    state.tab=(can('review')?'review':TABS.find(t=>can(t[3]))[0]); await refresh(); shell();});
+}
+function signOut(){state.token=null;state.me=null;state.result=null;state.sel=null;loginView();}
+
+/* ---------- shell ---------- */
+async function refresh(){if(!can("view_record")){state.referrals=[];return;} const r=await api("/api/referrals"); state.referrals=r.ok?r.data:[];}
+function shell(){
+  const pend=state.referrals.filter(r=>["pending_review","needs_manual_triage"].includes(r.status)).length;
+  const ready=state.referrals.filter(r=>r.status==="reviewed").length;
+  $("#root").innerHTML=`<div class="app"><nav aria-label="Main">
+    <div class="logo"><b>＋</b> Referral</div>
+    ${TABS.map(t=>`<button data-tab="${t[0]}" ${state.tab===t[0]?'aria-current="page"':""}><span aria-hidden="true">${t[1]}</span>${t[2]}
+      ${t[0]==="review"&&pend?`<span class="count">${pend}</span>`:""}${t[0]==="track"&&ready?`<span class="count">${ready}</span>`:""}</button>`).join("")}
+    <div class="who"><strong>${esc(state.me.user)}</strong><br><span class="muted">${esc(cap(state.me.role))}</span><br><button class="btn sec" style="margin-top:8px;padding:6px 12px" id="out">Sign out</button></div>
+  </nav><main id="main" tabindex="-1"></main></div>`;
+  document.querySelectorAll("nav [data-tab]").forEach(b=>b.onclick=async()=>{state.tab=b.dataset.tab;state.sel=null;await refresh();shell();});
+  $("#out").onclick=signOut; view();
+}
+function denied(msg){return `<div class="card"><h2>Not available for your role</h2><p class="muted">${esc(msg||"This screen is not part of your role.")} Switch accounts with “Sign out” to try another role.</p></div>`;}
+async function view(){
+  const t=TABS.find(x=>x[0]===state.tab), m=$("#main");
+  if(!can(t[3])){m.innerHTML=denied();return;}
+  ({new:newView,review:reviewView,track:trackView,audit:auditView,monitor:monitorView,risk:riskView})[state.tab](m);
+}
+
+/* ---------- 1. new referral ---------- */
+function steps(n){return `<ol class="steps" aria-label="Progress">${["Enter details","Check by AI","Review","Send"].map((s,i)=>`<li class="${i<n?"done":i===n?"on":""}"><b>${i<n?"✓":i+1}</b>${s}</li>`).join("")}</ol>`;}
+function newView(m){
+  const M=state.meta, F=state.form;
+  m.innerHTML=`<h2>New referral</h2><p class="muted">Fill in what you know. Fields are checked as you type, so mistakes are caught before they reach the AI.</p>${steps(0)}
+  <form id="f" class="card" novalidate>
+   <h3>Patient</h3><div class="grid g3">
+    <div><label class="f" for="age">Age <span class="hint">years</span></label><input id="age" type="number" inputmode="decimal" min="0" max="110" value="${esc(F.age)}"><div class="err" data-e="age"></div></div>
+    <div><label class="f" for="sex">Sex</label><select id="sex"><option value="">Select…</option><option value="0" ${F.sex==="0"?"selected":""}>Male</option><option value="1" ${F.sex==="1"?"selected":""}>Female</option></select><div class="err" data-e="sex"></div></div>
+    <div><label class="f" for="reason">Reason for referral</label><select id="reason"><option value="">Select…</option>${M.reasons.map(r=>`<option value="${r.id}" ${F.reason===r.id?"selected":""}>${esc(r.label)}</option>`).join("")}</select><div class="err" data-e="reason"></div></div>
+   </div>
+   <h3 style="margin-top:20px">Vital signs <span class="hint">normal range shown for reference</span></h3><div class="grid g3">
+    ${M.vitals.map(v=>`<div><label class="f" for="${v.id}">${esc(v.label)} <span class="hint">${esc(v.unit)} · normal ${esc(v.normal)}</span></label><input id="${v.id}" type="number" inputmode="decimal" step="any" value="${esc(F[v.id])}"><div class="err" data-e="${v.id}"></div></div>`).join("")}
+   </div>
+   <h3 style="margin-top:20px">Findings <span class="hint">tick all that apply</span></h3><div class="chips">${M.findings.map(c=>chip(c,F)).join("")}</div>
+   <h3 style="margin-top:20px">Medical history</h3><div class="chips">${M.history.map(c=>chip(c,F)).join("")}</div>
+   <div id="formerr" aria-live="polite"></div>
+   <div class="row" style="margin-top:22px"><button class="btn" type="submit" id="go">Check &amp; submit</button>
+    <button class="btn sec" type="button" id="sample">Fill with a sample case</button><button class="btn sec" type="button" id="clear">Clear</button></div>
+  </form><div id="res" aria-live="polite">${state.result?resultView(state.result):""}</div>`;
+  const form=$("#f");
+  form.addEventListener("input",()=>{collect();});
+  form.addEventListener("change",e=>{collect();if(e.target.id)liveCheck(e.target.id);});
+  form.addEventListener("focusout",e=>{if(e.target.id&&e.target.matches("input,select"))liveCheck(e.target.id);});
+  form.onsubmit=submitForm;
+  $("#sample").onclick=async()=>{const r=await api("/api/sample");const d=r.data;state.form={};
+    ["age","hr","sbp","spo2","temp","rr"].forEach(k=>state.form[k]=String(Math.round(d[k]*10)/10));
+    state.form.sex=String(d.sex);state.form.reason=d.reason;[...M.findings,...M.history].forEach(c=>state.form[c.id]=!!d[c.id]);state.result=null;newView(m);};
+  $("#clear").onclick=()=>{state.form={};state.result=null;newView(m);};
+}
+function chip(c,F){return `<label class="chip"><input type="checkbox" id="${c.id}" ${F[c.id]?"checked":""}><span>${esc(c.label)}</span></label>`;}
+function collect(){const M=state.meta,F=state.form;
+  ["age","sex","reason",...M.vitals.map(v=>v.id)].forEach(k=>{const e=$("#"+k);if(e)F[k]=e.value;});
+  [...M.findings,...M.history].forEach(c=>{const e=$("#"+c.id);if(e)F[c.id]=e.checked;});}
+function payload(){const F=state.form,M=state.meta,r={};
+  ["age","hr","sbp","spo2","temp","rr"].forEach(k=>r[k]=F[k]===undefined?"":F[k]);
+  r.sex=F.sex===""||F.sex===undefined?null:Number(F.sex);r.reason=F.reason||null;
+  [...M.findings,...M.history].forEach(c=>r[c.id]=F[c.id]?1:0);return r;}
+const LAB={age:"Age",sex:"Sex",reason:"Reason for referral"};
+function fieldError(id){ // instant, client-side hints (the server layer is still the authority)
+  const M=state.meta,F=state.form,v=M.vitals.find(x=>x.id===id),val=F[id];
+  if(v){if(val===""||val===undefined)return"";const n=Number(val);if(Number.isNaN(n))return"Enter a number.";if(n<v.min||n>v.max)return`${v.label} should be between ${v.min} and ${v.max} ${v.unit}.`;}
+  if(id==="age"){if(val===""||val===undefined)return"";const n=Number(val);if(Number.isNaN(n)||n<0||n>110)return"Age should be between 0 and 110 years.";}
+  return"";
+}
+function liveCheck(id){const e=$("#"+id),box=$(`[data-e="${id}"]`);if(!e||!box)return;const msg=fieldError(id);box.textContent=msg;e.classList.toggle("bad",!!msg);e.classList.toggle("good",!msg&&e.value!=="");if(msg)e.setAttribute("aria-invalid","true");else e.removeAttribute("aria-invalid");}
+async function submitForm(ev){
+  ev.preventDefault();collect();document.querySelectorAll("[data-e]").forEach(b=>b.textContent="");
+  const btn=$("#go");btn.disabled=true;btn.textContent="Checking…";
+  const r=await api("/api/referrals",{body:{ref:payload()}});btn.disabled=false;btn.textContent="Check & submit";
+  if(r.status===422){state.result={rejected:r.data.errors};markCodes(r.data.codes||[]);}
+  else if(r.status===403){state.result={denied:r.data.error};}
+  else{state.result={ok:r.data.referral};state.form={};await refresh();}
+  newView($("#main"));$("#res").scrollIntoView({behavior:"smooth",block:"start"});
+}
+function markCodes(codes){setTimeout(()=>codes.forEach(c=>{const f=c.split(":")[1],e=$("#"+f);if(e){e.classList.add("bad");const b=$(`[data-e="${f}"]`);if(b&&!b.textContent)b.textContent="Please check this entry.";}}),0);}
+function resultView(r){
+  if(r.rejected)return`<div class="banner bad" role="alert"><span aria-hidden="true">⛔</span><div><strong>Not sent yet: input check failed.</strong> Nothing reached the AI. Please fix:<ul>${r.rejected.map(e=>`<li>${esc(e)}</li>`).join("")}</ul></div></div>`;
+  if(r.denied)return`<div class="banner bad"><span>⛔</span><div>${esc(r.denied)}</div></div>`;
+  const x=r.ok;return`${steps(2)}<div class="banner ok"><span aria-hidden="true">✅</span><div><strong>Referral ${esc(x.id)} passed the input check and is waiting for review.</strong><br>
+   ${x.flagged?`The monitor flagged this case (${esc(cap(x.flag_reason))}), so it needs manual triage instead of an AI suggestion.`:`The AI suggestion will be checked by a person before anything is sent.`}</div></div>`;
+}
+
+/* ---------- 2. review ---------- */
+function urg(u){return`<span class="pill ${u}">${u==="emergent"?"🔴":u==="urgent"?"🟠":"🟢"} ${cap(u)}</span>`;}
+function sourceTable(r){const M=state.meta,x=r.ref,yes=[...M.findings,...M.history].filter(c=>x[c.id]==1).map(c=>c.label);
+  return`<dl class="kv"><dt>Age / sex</dt><dd>${esc(x.age)} · ${x.sex==1?"Female":"Male"}</dd><dt>Reason</dt><dd>${esc(M.reasons.find(q=>q.id===x.reason)?.label)}</dd>
+   ${M.vitals.map(v=>`<dt>${esc(v.label)}</dt><dd>${esc(Math.round(x[v.id]*10)/10)} ${esc(v.unit)}</dd>`).join("")}<dt>Findings &amp; history</dt><dd>${yes.length?esc(yes.join(", ")):"None ticked"}</dd></dl>`;}
+function reviewView(m){
+  const q=state.referrals.filter(r=>["pending_review","needs_manual_triage"].includes(r.status)).reverse();
+  if(!state.sel||!q.find(r=>r.id===state.sel))state.sel=q[0]?.id||null;
+  m.innerHTML=`<h2>Review queue</h2><p class="muted">The AI only suggests. A person decides. Check the entered details first, then confirm or change the suggestion.</p>${steps(2)}
+   ${q.length?`<div class="row" style="margin-bottom:12px">${q.map(r=>`<button class="btn ${r.id===state.sel?"":"sec"}" data-sel="${r.id}">${r.id}${r.flagged?" ⚠️":""}</button>`).join("")}</div><div id="rv"></div>`:`<div class="card empty">Nothing waiting for review. 🎉<br>New referrals appear here.</div>`}`;
+  document.querySelectorAll("[data-sel]").forEach(b=>b.onclick=()=>{state.sel=b.dataset.sel;reviewView(m);});
+  if(q.length)reviewCard(q.find(r=>r.id===state.sel),$("#rv"));
+}
+function reviewCard(r,el){
+  const M=state.meta,a=r.ai,manual=r.status==="needs_manual_triage",conf=Math.round(a.confidence*100);
+  el.innerHTML=`<div class="split"><div class="card"><h3>1. What was entered <span class="hint">${esc(r.id)} · by ${esc(r.by)}</span></h3>${sourceTable(r)}</div>
+   <div class="card"><h3>2. AI suggestion</h3>
+   ${manual?`<div class="banner warn" role="alert"><span>⚠️</span><div><strong>Manual triage needed.</strong> The monitor flagged this case (${esc(cap(r.flag_reason||""))}), so the suggestion is hidden. Please decide yourself.</div></div>`:
+   `<dl class="kv"><dt>Specialty</dt><dd>${esc(a.specialty_label)}</dd><dt>Urgency</dt><dd>${urg(a.urgency_label)}</dd><dt>Confidence</dt><dd><div class="bar" aria-label="Confidence ${conf}%"><i style="width:${conf}%"></i></div><span class="small muted">${conf}% · model ${esc(a.model_version)}</span></dd></dl>
+   <div class="banner info small"><span>ℹ️</span><div>Confidence is not the same as being right. If something in the left panel looks off, override.</div></div>`}
+   </div></div>
+   <div class="card"><h3>3. Your decision</h3>
+   ${manual?"":`<div class="chips" role="radiogroup" aria-label="Decision"><label class="chip"><input type="radio" name="dec" value="confirm" checked><span>✔ Confirm suggestion</span></label><label class="chip"><input type="radio" name="dec" value="override"><span>✎ Change it</span></label></div>`}
+   <div id="ov" style="${manual?"":"display:none"}"><div class="grid g2" style="margin-top:12px"><div><label class="f" for="osp">Specialty</label><select id="osp">${M.specialties.map(s=>`<option value="${s}" ${s===a.specialty?"selected":""}>${esc(cap(s))}</option>`).join("")}</select></div>
+     <div><label class="f" for="our">Urgency</label><select id="our">${M.urgency.map(s=>`<option value="${s}" ${s===a.urgency_label?"selected":""}>${esc(cap(s))}</option>`).join("")}</select></div></div>
+     <label class="f" for="note" style="margin-top:10px">Reason for your decision <span class="hint">required</span></label><textarea id="note" rows="2" placeholder="e.g. SpO₂ is low and patient is short of breath"></textarea></div>
+   <div id="cf" style="${manual?"display:none":""}"><label class="row" style="margin-top:14px;gap:8px"><input type="checkbox" id="chk"> <span>I checked the entered details on the left against the suggestion.</span></label></div>
+   <div class="err" id="rverr" aria-live="polite"></div>
+   <div class="row" style="margin-top:12px"><button class="btn" id="save">Save decision</button></div></div>`;
+  el.querySelectorAll("[name=dec]").forEach(i=>i.onchange=()=>{const o=i.value==="override"&&i.checked;$("#ov").style.display=o?"":"none";$("#cf").style.display=o?"none":"";});
+  $("#save").onclick=async()=>{
+    const dec=manual?"override":el.querySelector("[name=dec]:checked").value;
+    const body={decision:dec,specialty:$("#osp")?.value,urgency:$("#our")?.value,note:$("#note")?.value,checked_source:$("#chk")?.checked};
+    const x=await api(`/api/referrals/${r.id}/review`,{body});
+    if(!x.ok){$("#rverr").textContent=x.data.error||"Could not save.";return;}
+    await refresh();state.sel=null;shell();};
+}
+
+/* ---------- 3. tracker ---------- */
+function trackView(m){
+  const rs=state.referrals,S={pending_review:"Waiting for review",needs_manual_triage:"Needs manual triage",reviewed:"Reviewed, ready to send",dispatched:"Sent",acknowledged:"Received"};
+  m.innerHTML=`<h2>Referral tracker</h2><p class="muted">Follow every referral from entry to receipt.</p>${steps(3)}
+  ${rs.length?`<div class="card" style="padding:6px 12px;overflow:auto"><table><thead><tr><th>ID</th><th>Reason</th><th>Specialty</th><th>Urgency</th><th>Status</th><th></th></tr></thead><tbody>
+  ${rs.map(r=>{const f=r.final;const sp=f?f.specialty:r.ai.specialty,u=f?f.urgency:r.ai.urgency_label;
+   return`<tr><td><strong>${r.id}</strong><br><span class="muted small">${esc(r.created)}</span></td><td>${esc(state.meta.reasons.find(q=>q.id===r.ref.reason)?.label)}</td>
+   <td>${esc(cap(sp))}${f?"":' <span class="muted small">(AI)</span>'}</td><td>${urg(u)}</td><td><span class="st ${r.status}">${S[r.status]}</span></td>
+   <td>${r.status==="reviewed"&&can("dispatch")?`<button class="btn" data-act="dispatch" data-id="${r.id}">Send</button>`:""}${r.status==="dispatched"&&can("acknowledge")?`<button class="btn" data-act="acknowledge" data-id="${r.id}">Confirm receipt</button>`:""}
+   <button class="btn sec" data-act="open" data-id="${r.id}">History</button></td></tr>`}).join("")}</tbody></table></div><div id="hist"></div>`:`<div class="card empty">No referrals yet.</div>`}`;
+  m.querySelectorAll("[data-act]").forEach(b=>b.onclick=async()=>{
+    if(b.dataset.act==="open"){const r=rs.find(x=>x.id===b.dataset.id);$("#hist").innerHTML=`<div class="card"><h3>${r.id} history</h3><ul class="timeline">${r.history.map(h=>`<li><strong>${esc(h[2])}</strong> <span class="muted small">· ${esc(h[1])} · ${esc(h[0])}</span></li>`).join("")}</ul>${r.final?.note?`<p class="small"><strong>Reviewer note:</strong> ${esc(r.final.note)}</p>`:""}</div>`;$("#hist").scrollIntoView({behavior:"smooth"});return;}
+    const x=await api(`/api/referrals/${b.dataset.id}/${b.dataset.act}`,{body:{}});if(!x.ok)alert(x.data.error);await refresh();shell();});
+}
+
+/* ---------- 4. audit ---------- */
+async function auditView(m){
+  const r=await api("/api/audit");if(!r.ok){m.innerHTML=denied(r.data.error);return;}
+  m.innerHTML=`<h2>Audit log</h2><p class="muted">Every action is chained to the one before it, so changes or deletions can be detected. The log records what happened; it does not stop a wrong referral by itself.</p>
+  <div class="card"><div class="row"><button class="btn" id="ver">Check log integrity</button><span id="vres" aria-live="polite"></span></div></div>
+  <div class="card" style="padding:6px 12px;overflow:auto"><table><thead><tr><th>#</th><th>Time</th><th>Who</th><th>Action</th><th>Referral</th><th>Fingerprint</th></tr></thead><tbody>
+  ${r.data.entries.map(e=>`<tr><td>${e.seq}</td><td class="small">${new Date(e.ts*1000).toLocaleString()}</td><td>${esc(e.actor)}</td><td><strong>${esc(cap(e.action))}</strong>${Object.keys(e.detail||{}).length?`<br><span class="muted small">${esc(JSON.stringify(e.detail))}</span>`:""}</td><td>${esc(e.ref||"—")}</td><td class="mono">${esc(e.hash.slice(0,10))}</td></tr>`).join("")}</tbody></table></div>`;
+  $("#ver").onclick=async()=>{const v=await api("/api/audit/verify");$("#vres").innerHTML=v.data.ok?`<span class="pill routine">✔ Intact (${v.data.entries} entries)</span>`:`<span class="pill emergent">✖ Problems: ${esc(v.data.problems.join(", "))}</span>`;};
+}
+
+/* ---------- 5. monitor ---------- */
+async function monitorView(m){
+  const r=(await api("/api/monitor")).data,tone={stable:"ok",drift:"bad",collecting:"info"}[r.status],msg={stable:"Inputs look like the data the model learned from.",drift:"Incoming referrals look different from what the model was trained on. Review recent suggestions more carefully.",collecting:"Collecting at least 30 recent referrals before checking for drift."}[r.status];
+  const pct=v=>v==null?"—":Math.round(v*100)+"%";
+  m.innerHTML=`<h2>Model monitor</h2><p class="muted">Watches for the model drifting away from the data it knows, and for how often reviewers change its suggestions.</p>
+  <div class="banner ${tone}" role="status"><span>${r.status==="drift"?"🚨":r.status==="stable"?"✅":"⏳"}</span><div><strong>${cap(r.status)}.</strong> ${msg}</div></div>
+  <div class="grid g3"><div class="card"><div class="muted small">Recent referrals checked</div><h2>${r.window_size}</h2></div><div class="card"><div class="muted small">Reviewer agreement</div><h2>${pct(r.agreement)}</h2></div>
+  <div class="card"><div class="muted small">Override rate</div><h2>${pct(r.override_rate)}</h2></div><div class="card"><div class="muted small">Drift score (PSI)</div><h2>${r.psi==null?"—":r.psi.toFixed(2)}</h2><div class="muted small">alert above ${r.threshold??0.2}${r.worst?` · biggest change: ${esc(r.worst)}`:""}</div></div></div>
+  <p class="small muted">Agreement is not correctness. A high agreement rate can also mean reviewers are over-trusting the AI. Model: <span class="mono">${esc(r.model)}</span></p>
+  ${can("manage_model")?`<div class="card"><h3>Demo controls <span class="hint">ML engineer only</span></h3><div class="row"><button class="btn" id="sim">Simulate drifted referrals</button><button class="btn sec" id="rst">Reset window</button></div></div>`:`<p class="small muted">Sign in as the ML engineer to try the drift demo.</p>`}`;
+  $("#sim")&&($("#sim").onclick=async()=>{await api("/api/simulate-drift",{body:{}});monitorView(m);});$("#rst")&&($("#rst").onclick=async()=>{await api("/api/reset-monitor",{body:{}});monitorView(m);});
+}
+
+/* ---------- 6. risk ---------- */
+async function riskView(m){
+  const d=(await api("/api/lopa")).data;if(d.error){m.innerHTML=`<h2>Risk analysis</h2><div class="card">${esc(d.error)}</div>`;return;}
+  const TN={urgent_recall:"Urgent-case recall",macro_f1:"Macro-F1",ece:"Calibration error (ECE)",robustness_drop_pts:"Robustness drop (points)",drift_detected_within_one_window:"Drift detected within one window",latency_s:"Time per suggestion (s)"};
+  const LAY={PL1:"Input validation",PL2:"Access controls",PL3:"Model monitoring",PL4:"Human oversight",PL5:"Audit"};
+  m.innerHTML=`<h2>Risk analysis</h2><p class="muted">Results from the layer-of-protection tests (synthetic data, scripted attacks). A <strong>lower failure rate</strong> means a safeguard stops the problem more often. Source: <span class="mono">${esc(d.source)}</span></p>
+  <div class="card"><h3>How well each safeguard works, per test scenario</h3>
+  ${d.scenarios.map(s=>`<div style="margin:14px 0"><strong>${s.id} · ${esc(s.name)}</strong>${Object.entries(s.pfds).map(([l,p])=>`<div class="row" style="gap:12px;margin-top:6px"><span style="width:150px">${LAY[l]}</span><div class="bar" style="flex:1;min-width:120px" role="img" aria-label="${LAY[l]} fails ${Math.round(p.pfd*100)}% of the time"><i style="width:${Math.max(1,p.pfd*100)}%;background:${p.pfd>.5?"var(--bad)":p.pfd>.2?"var(--warn)":"var(--ok)"}"></i></div><span class="small" style="width:210px">fails ${(p.pfd*100).toFixed(1)}% of the time <span class="muted">(${(p.lo*100).toFixed(1)}–${(p.hi*100).toFixed(1)}%)</span></span></div>`).join("")}</div>`).join("")}
+  <p class="small muted">Bars: green = fails rarely, amber = sometimes, red = often. Ranges are 95% confidence intervals.</p></div>
+  <div class="card"><h3>Machine learning checks vs targets</h3><table><tbody>${Object.entries(d.targets).map(([k,v])=>`<tr><td>${esc(TN[k]||cap(k))}</td><td>${Number(v.value).toFixed(3)}</td><td class="muted">${esc(v.target)}</td><td><span class="pill ${v.status==="PASS"?"routine":"emergent"}">${v.status==="PASS"?"✔ Met":"✖ Not met"}</span></td></tr>`).join("")}</tbody></table></div>
+  <div class="banner warn"><span>⚠️</span><div><strong>Shared-failure warning.</strong> When one shared service goes down, the model monitor and the human reviewer fail together: joint failure was about ${d.eq2.ratio?d.eq2.ratio.toFixed(1):"—"}× what independence would predict.</div></div>`;
+}
+
+/* ---------- boot ---------- */
+(async()=>{state.meta=(await api("/api/meta")).data;loginView();})();
+</script>
+</body>
+</html>

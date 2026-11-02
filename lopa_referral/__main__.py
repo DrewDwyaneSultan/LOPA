@@ -65,6 +65,8 @@ def main():
     sub.add_parser("eval-model").set_defaults(f=cmd_eval)
     r = sub.add_parser("run"); r.add_argument("--demands", type=int, default=cfg.DEMANDS_PER_LAYER)
     r.add_argument("--seeds", type=int, default=5); r.add_argument("--out", default="outputs"); r.set_defaults(f=cmd_run)
+    sv = sub.add_parser("serve"); sv.add_argument("--port", type=int, default=8000); sv.add_argument("--open", action="store_true")
+    sv.set_defaults(f=lambda a: __import__("lopa_referral.webapp", fromlist=["serve"]).serve(port=a.port, open_browser=a.open))
     rp = sub.add_parser("report"); rp.add_argument("--out", default="outputs"); rp.set_defaults(f=cmd_report)
     a = ap.parse_args(); a.f(a)
 

@@ -17,7 +17,14 @@ python -m lopa_referral demo                           # one valid and one inval
 python -m lopa_referral eval-model                     # ML measures vs the Table 6 targets
 python -m lopa_referral run --demands 1000 --seeds 5   # full study run -> outputs/REPORT.md, outputs/results.json
 python -m lopa_referral run --demands 200 --seeds 2    # quick smoke run (~1.5 min)
+python -m lopa_referral serve --open                   # web interface at http://127.0.0.1:8000
 ```
+
+## Web interface
+`python -m lopa_referral serve --open` starts a local, dependency-free web app (standard library only). Sign in with a demo role, then:
+**New referral** (live validation, plain-language errors) → **Review queue** (entered details beside the AI suggestion; confirm needs a source-check tick, override needs a reason; monitor-flagged cases go to manual triage) →
+**Tracker** (send, confirm receipt, history) → **Audit log** (integrity check) → **Model monitor** (drift demo for the ML-engineer role) → **Risk analysis** (results of the latest `run`).
+Each role only sees what it may do, which is the access-control layer in action. Data is synthetic and in memory only; accounts are demo accounts (real authentication is future work).
 
 ## What is in the box
 | Module | Role |
@@ -27,6 +34,7 @@ python -m lopa_referral run --demands 200 --seeds 2    # quick smoke run (~1.5 m
 | `model.py`, `model_eval.py` | specialty + urgency models, imbalance handling, Table 6 evaluation |
 | `pipeline.py` | the referral workflow with each layer switchable |
 | `scenarios.py`, `faults.py`, `harness.py` | S1–S10 test scenarios, C0–C5 conditions, PFD measurement |
+| `webapp.py`, `web/index.html` | web interface over the same layers |
 | `lopa.py`, `report.py` | f_mit, gap ratio, Clopper–Pearson, rule of three, Jeffreys Monte Carlo, EQ1–EQ3 |
 
 ## Honest limitations

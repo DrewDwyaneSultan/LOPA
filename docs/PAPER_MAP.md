@@ -28,5 +28,5 @@ value from the paper or a placeholder to be replaced with Phase 1 / ORDI / partn
 - `config.py`: annual volume, initiating rates, tolerable frequencies, common-cause rate are placeholders.
 - Real clinician-adjudicated reference set and real blinded reviewers replace the simulated ones.
 - The referral form follows a generalized baseline; align it with the PH eReferral Implementation Guide / partner form.
-- No web UI yet; the prototype is a library plus CLI. A referral-entry screen is the natural next module.
+- Web interface is a first version: demo accounts, in-memory data, no real authentication or database.
 - S6/S7 are simple stochastic simulations (outside the LOPA equation, as in the paper).
